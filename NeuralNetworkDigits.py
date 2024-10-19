@@ -1,12 +1,8 @@
-import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tkinter as tk
-from tkinter import ALL, EventType
-from PIL import Image, ImageGrab
-
+from PIL import Image
+import cv2
 class layer:
     def __init__(self, numInputs, numNeurons):
         self.weights = np.random.rand(numInputs, numNeurons) - 0.5
@@ -70,26 +66,46 @@ def makePrediction(layer1, layer2, activation1, activation2, input):
 
 
 def testPrediction(index):
-    currentImage = Xtrain.T[:, index, None]
+    currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
-    print(makePrediction(layer1, layer2, activation1, activation2, Xtrain[index]), ytrain[index])
-    plt.title(makePrediction(layer1, layer2, activation1, activation2, Xtrain[index]))
+    #print(makePrediction(layer1, layer2, activation1, activation2, Xtrain[index]), ytrain[index])
+    plt.title("Network: " + str(makePrediction(layer1, layer2, activation1, activation2, XTesting[index])))
     plt.gray()
     plt.imshow(currentImage, interpolation="nearest")
     plt.show()
 
+def testPredictionTrain(index):
+    currentImage = Xtrain.T[:, index, None]
+    currentImage = currentImage.reshape((28, 28)) * 255
+    plt.title(
+        "Network: " + str(makePrediction(layer1, layer2, activation1, activation2, Xtrain[index])) + " | Label: " + str(ytrain[index]))
+    plt.gray()
+    plt.imshow(currentImage, interpolation="nearest")
+    plt.show()
+
+def shuffleData(data, n):
+    data_train = data
+    np.random.shuffle(data_train)
+    data_train = data_train.T
+    ytrain = data_train[0]
+    Xtrain = data_train[1:n]
+    Xtrain = Xtrain / 255.0
+    Xtrain = Xtrain.T
+    return Xtrain, ytrain
+
+testingData = pd.read_csv("test.csv")
+testingData = np.array(testingData)
+m, n = testingData.shape
+data_test = testingData.T
+#ytesting = data_test[0]
+XTesting = data_test
+XTesting = XTesting/255.0
+XTesting = XTesting.T
+
 data = pd.read_csv("train.csv")
 data = np.array(data)
 m, n = data.shape
-
-data_train = data[1000:m].T
-ytrain = data_train[0]
-Xtrain = data_train[1:n]
-Xtrain = Xtrain / 255.0
-Xtrain = Xtrain.T
-
-# Xtest = np.zeros((1, 784))
-# Xtest[0] = Xtrain[1]
+Xtrain, ytrain = shuffleData(data, n)
 
 layer1 = layer(784, 10)
 activation1 = ReLU()
@@ -99,7 +115,7 @@ activation2 = softmax()
 iterations = 40000
 numCorrect = 0
 total = 0
-sets = 1
+sets = 5
 
 for shuffle in range(sets):
     for i in range(iterations):
@@ -107,57 +123,35 @@ for shuffle in range(sets):
         Xtest[0] = Xtrain[i]
         forwardProp(layer1, layer2, activation1, activation2, Xtest)
         dW1, db1, dW2, db2 = backProp(layer1, layer2, activation1, activation2, Xtest, ytrain[i])
-        updateParameters(layer1, layer2, dW1, db1, dW2, db2, 0.008)
+        updateParameters(layer1, layer2, dW1, db1, dW2, db2, 0.01)
         #print(get_predictions(activation2.outputs) ,ytrain[i])
         if(get_predictions(activation2.outputs) == ytrain[i]):
             numCorrect += 1
         total += 1
+    Xtrain, ytrain = shuffleData(data, n)
+print(numCorrect/total)
 
 # df = pd.DataFrame(layer1.weights)
 # df.to_csv("weights.csv", header=False, index=False)
 # df = pd.read_csv("weights.csv")
 # print(layer1.weights.shape, df)
 
-#testNumber = input("What prediction?")
+testNumber = input("What prediction?")
 # while(not(testNumber == -1)):
-#testPrediction(int(testNumber))
+testPredictionTrain(int(testNumber))
 #     time.sleep(1)
 #     testNumber = input("What prediction?")
 
-print(numCorrect/total)
-
-def paint(e):
-    x1, y1 = e.x-1, e.y-1
-    x2, y2 = e.x, e.y
-    canvas.create_line(x1,y1,x2,y2,fill='white', width=3, capstyle="round", arrow=tk.BOTH)
-
-def do_zoom(event):
-    x = canvas.canvasx(event.x)
-    y = canvas.canvasy(event.y)
-    factor = 1.001 ** event.delta
-    canvas.scale(ALL, x, y, factor, factor)
-
-root = tk.Tk()
-root.title("Digit Recognition Demo")
-root.geometry("800x800")
-
-brushColor = "black"
-
-canvas = tk.Canvas(root, width=800, height=800, bg="black")
-canvas.create_bitmap((28,28))
-canvas.bind('<B1-Motion>', paint)
-canvas.bind("<MouseWheel>", do_zoom) # WINDOWS ONLY
-canvas.pack()
-
-def getter(widget):
-    x=root.winfo_rootx()+widget.winfo_x()
-    y=root.winfo_rooty()+widget.winfo_y()
-    x1=x+widget.winfo_width()
-    y1=y+widget.winfo_height()
-    ImageGrab.grab().crop((x,y,x1,y1)).save("testImage.png")
-
-root.mainloop()
-
-time.sleep(3)
-
-getter(root)
+# img = Image.open("testDigit.png")
+# img = img.convert('L')
+# imgArray = np.array(img)
+# imgArray = imgArray/255
+# currentImage = imgArray
+# currentImage = currentImage.reshape((28, 28)) * 255
+# Xpredict = np.zeros((1, 784))
+# Xpredict[0] = imgArray.flatten()
+# print(makePrediction(layer1, layer2, activation1, activation2, Xpredict))
+# print(activation2.outputs)
+# plt.gray()
+# plt.imshow(currentImage, interpolation="nearest")
+# #plt.show()
