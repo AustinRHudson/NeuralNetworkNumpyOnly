@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from PIL import Image
+import tkinter as tk
+from PIL import Image, ImageTk
 import cv2
 from ImageRandomization import randomNoise
+
 class layer:
     def __init__(self, numInputs, numNeurons):
         self.weights = np.random.rand(numInputs, numNeurons) - 0.5
@@ -24,6 +26,9 @@ class softmax:
         softmax = numerator / denominator
         self.outputs = softmax
 
+class guiIndex:
+    def __init__(self, index):
+        self.index = index
 def ReLUDerivative(x):
     return x > 0
 def oneHotEncode(Y):
@@ -74,6 +79,7 @@ def testPredictionTest(index):
     plt.gray()
     plt.imshow(currentImage, interpolation="nearest")
     plt.show()
+    pass
 
 def testPredictionTrain(index):
     currentImage = Xtrain.T[:, index, None]
@@ -84,6 +90,48 @@ def testPredictionTrain(index):
     plt.imshow(currentImage, interpolation="nearest")
     plt.show()
 
+def openLabelGUI(index):
+    currentImage = Xtrain.T[:, index, None]
+    currentImage = currentImage.reshape((28, 28)) * 255
+    plot(currentImage, index, makePrediction(layer1, layer2, activation1, activation2, XTesting[index]))
+
+def openNextLabel(index):
+    nextImage = XTesting.T[:, index, None]
+    nextImage = nextImage.reshape((28, 28)) * 255
+    return nextImage, makePrediction(layer1, layer2, activation1, activation2, XTesting[index])
+
+def nextLabel(nextIndex, label, numLabel, direction):
+    print(nextIndex.index)
+    if(direction < 0 and not(nextIndex.index == 0)):
+        nextIndex.index = nextIndex.index - 1
+    elif(direction > 0 and not(nextIndex.index == 27999)):
+        nextIndex.index = nextIndex.index + 1
+    else:
+        return
+    nextLabelImageArray, prediction = openNextLabel(nextIndex.index)
+    nextLabelImage = Image.fromarray(nextLabelImageArray)
+    resizedNextLabelImage = nextLabelImage.resize((448, 448), resample=Image.NEAREST)
+    photo = ImageTk.PhotoImage(resizedNextLabelImage)
+    label.configure(image=photo)
+    label.image = photo
+    numLabel.configure(text=str(prediction))
+def plot(testImage, index, prediction):
+    GUIIndex = guiIndex(index)
+    window = tk.Tk()
+    window.title("Neural Network Testing")
+    window.geometry("800x800")
+    image = Image.fromarray(testImage)
+    resizedImage = image.resize((448, 448), resample=Image.NEAREST)
+    photo = ImageTk.PhotoImage(resizedImage)
+    label = tk.Label(window, image=photo)
+    label.pack()
+    numberLabel = tk.Label(window, text=str(prediction), font=("Arial", 25))
+    numberLabel.pack()
+    backButton = tk.Button(window, text="Previous label", command= lambda: nextLabel(GUIIndex, label, numberLabel, -1))
+    backButton.pack()
+    forwardButton = tk.Button(window, text="Next label", command= lambda: nextLabel(GUIIndex, label, numberLabel, 1))
+    forwardButton.pack()
+    window.mainloop()
 def shuffleData(data, n):
     data_train = data
     np.random.shuffle(data_train)
@@ -93,7 +141,7 @@ def shuffleData(data, n):
     Xtrain = Xtrain / 255.0
     Xtrain = Xtrain.T
     m, n = Xtrain.shape
-    Xtrain = randomNoise(Xtrain, m, n, .25, 30)
+    Xtrain = randomNoise(Xtrain, m, n, .25, 45)
     return Xtrain, ytrain
 
 testingData = pd.read_csv("test.csv")
@@ -112,15 +160,15 @@ Xtrain, ytrain = shuffleData(data, n)
 
 
 
-layer1 = layer(784, 20)
+layer1 = layer(784,100)
 activation1 = ReLU()
-layer2 = layer(20, 10)
+layer2 = layer(100, 10)
 activation2 = softmax()
 
 iterations = 40000
 numCorrect = 0
 total = 0
-sets = 5
+sets = 1
 
 for shuffle in range(sets):
     for i in range(iterations):
@@ -134,7 +182,7 @@ for shuffle in range(sets):
             numCorrect += 1
         total += 1
     Xtrain, ytrain = shuffleData(data, n)
-    print("Epochs completed: " + str((shuffle+1/sets) * 100) + "%")
+    print("Epochs completed: " + str(((shuffle+1)/sets) * 100) + "%")
 print(numCorrect/total)
 
 # df = pd.DataFrame(layer1.weights)
@@ -142,9 +190,16 @@ print(numCorrect/total)
 # df = pd.read_csv("weights.csv")
 # print(layer1.weights.shape, df)
 
-testNumber = input("What prediction?")
-#testPredictionTrain(int(testNumber))
-testPredictionTest(int(testNumber))
+openLabelGUI(int(100))
+
+#testing = True
+# while(testing):
+#     testNumber = input("What prediction?")
+#     if(int(testNumber) != -1):
+#         #testPredictionTest(int(testNumber))
+#         openLabelGUI(int(testNumber))
+#     else:
+#         testing = False
 
 img = Image.open("testDigit.png")
 img = img.convert('L')
