@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import cv2
+from ImageRandomization import randomNoise
 class layer:
     def __init__(self, numInputs, numNeurons):
         self.weights = np.random.rand(numInputs, numNeurons) - 0.5
@@ -65,7 +66,7 @@ def makePrediction(layer1, layer2, activation1, activation2, input):
     return get_predictions(activation2.outputs)
 
 
-def testPrediction(index):
+def testPredictionTest(index):
     currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
     #print(makePrediction(layer1, layer2, activation1, activation2, Xtrain[index]), ytrain[index])
@@ -91,6 +92,8 @@ def shuffleData(data, n):
     Xtrain = data_train[1:n]
     Xtrain = Xtrain / 255.0
     Xtrain = Xtrain.T
+    m, n = Xtrain.shape
+    Xtrain = randomNoise(Xtrain, m, n, .25, 30)
     return Xtrain, ytrain
 
 testingData = pd.read_csv("test.csv")
@@ -107,9 +110,11 @@ data = np.array(data)
 m, n = data.shape
 Xtrain, ytrain = shuffleData(data, n)
 
-layer1 = layer(784, 10)
+
+
+layer1 = layer(784, 20)
 activation1 = ReLU()
-layer2 = layer(10, 10)
+layer2 = layer(20, 10)
 activation2 = softmax()
 
 iterations = 40000
@@ -129,6 +134,7 @@ for shuffle in range(sets):
             numCorrect += 1
         total += 1
     Xtrain, ytrain = shuffleData(data, n)
+    print("Epochs completed: " + str((shuffle+1/sets) * 100) + "%")
 print(numCorrect/total)
 
 # df = pd.DataFrame(layer1.weights)
@@ -137,21 +143,19 @@ print(numCorrect/total)
 # print(layer1.weights.shape, df)
 
 testNumber = input("What prediction?")
-# while(not(testNumber == -1)):
-testPredictionTrain(int(testNumber))
-#     time.sleep(1)
-#     testNumber = input("What prediction?")
+#testPredictionTrain(int(testNumber))
+testPredictionTest(int(testNumber))
 
-# img = Image.open("testDigit.png")
-# img = img.convert('L')
-# imgArray = np.array(img)
-# imgArray = imgArray/255
-# currentImage = imgArray
-# currentImage = currentImage.reshape((28, 28)) * 255
-# Xpredict = np.zeros((1, 784))
-# Xpredict[0] = imgArray.flatten()
-# print(makePrediction(layer1, layer2, activation1, activation2, Xpredict))
-# print(activation2.outputs)
-# plt.gray()
-# plt.imshow(currentImage, interpolation="nearest")
-# #plt.show()
+img = Image.open("testDigit.png")
+img = img.convert('L')
+imgArray = np.array(img)
+imgArray = imgArray/255
+currentImage = imgArray
+currentImage = currentImage.reshape((28, 28)) * 255
+Xpredict = np.zeros((1, 784))
+Xpredict[0] = imgArray.flatten()
+print(makePrediction(layer1, layer2, activation1, activation2, Xpredict))
+print(activation2.outputs)
+plt.gray()
+plt.imshow(currentImage, interpolation="nearest")
+#plt.show()
