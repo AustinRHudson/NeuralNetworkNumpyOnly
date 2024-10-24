@@ -154,10 +154,12 @@ def plot(testImage, index, prediction):
     window = tk.Tk()
     window.title("Neural Network Testing")
     window.geometry("600x600")
+    window.configure(background='green')
     image = Image.fromarray(testImage)
     resizedImage = image.resize((448, 448), resample=Image.NEAREST)
     photo = ImageTk.PhotoImage(resizedImage)
     label = tk.Label(window, image=photo)
+    label.configure(pady=20)
     label.pack()
     numberLabel = tk.Label(window, text=str(prediction), font=("Arial", 25))
     numberLabel.pack()
@@ -184,7 +186,6 @@ testingData = pd.read_csv("test.csv")
 testingData = np.array(testingData)
 m, n = testingData.shape
 data_test = testingData.T
-#ytesting = data_test[0]
 XTesting = data_test
 XTesting = XTesting/255.0
 XTesting = XTesting.T
@@ -195,15 +196,15 @@ m, n = data.shape
 Xtrain, ytrain = shuffleData(data, n)
 
 
-layer1 = layer(784,100)
+layer1 = layer(784,10)
 activation1 = ReLU()
-layer2 = layer(100, 10)
+layer2 = layer(10, 10)
 activation2 = softmax()
 
 iterations = 40000
 numCorrect = 0
 total = 0
-sets = 10
+sets = 1
 
 for shuffle in range(sets):
     for i in range(iterations):
@@ -225,15 +226,6 @@ print(numCorrect/total)
 # print(layer1.weights.shape, df)
 
 openLabelGUI(int(100))
-
-#testing = True
-# while(testing):
-#     testNumber = input("What prediction?")
-#     if(int(testNumber) != -1):
-#         #testPredictionTest(int(testNumber))
-#         openLabelGUI(int(testNumber))
-#     else:
-#         testing = False
 
 img = Image.open("testDigit.png")
 img = img.convert('L')
