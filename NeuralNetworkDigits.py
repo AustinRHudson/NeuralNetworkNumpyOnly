@@ -24,6 +24,8 @@ class ReLU:
     def forward(self, inputs):
         #Turns all negative inputs from previous layer into 0.
         self.outputs = np.maximum(inputs, 0)
+    def type(self):
+        return "ReLU"
 
 #The "softmax" class is a class used to make an object that will perform calculations on the previous layers output using a "Softmax" activation function and storing it for later.
 class softmax:
@@ -35,6 +37,8 @@ class softmax:
         #Takes the exponential input of each row over the sum of the exponential input of each row, or (exponential(input[i])/sum(exponential(input))).
         softmax = numerator / denominator
         self.outputs = softmax
+    def type(self):
+        return "softmax"
 
 #A class designed to hold the index of the current sample the gui is looking at because tkinter doesn't allow returns on method calls on button press.
 class guiIndex:
@@ -47,6 +51,12 @@ def ReLUDerivative(x):
     #Derivative of ReLU function is 1 if X>0 and 0 if X<=0. The boolean is converted automatically into 1 and 0 which is perfect.
     return x > 0
 
+def autoDiff(inputs, activation):
+    if(activation.type() == "ReLU"):
+        return ReLUDerivative(inputs.outputs)
+    elif(activation.type() == "softmax"):
+        return 3
+    return 0
 #Method used to categorize the correct output and subtract from what the network outputted to determine loss.
 def oneHotEncode(Y):
     #Makes an array of zeroes that has the dimensions of (sampleAmount, output amount).
@@ -58,50 +68,65 @@ def oneHotEncode(Y):
     return oneHotY
 
 #This method just simply uses the forward method of each layer and activation and feeds them into eachother.
-def forwardProp(dense1, dense2, activation1, activation2, inputs):
-    dense1.forward(inputs)
-    activation1.forward(dense1.outputs)
-    dense2.forward(activation1.outputs)
-    activation2.forward(dense2.outputs)
+def forwardProp(layers, activations, inputs):
+    for i in range(len(layers)):
+        if(not(i == 0)):
+            layers[i].forward(activations[i-1].outputs)
+            activations[i].forward(layers[i].outputs)
+        else:
+            layers[i].forward(inputs)
+            activations[i].forward(layers[i].outputs)
 
 #Calculates loss and how much each parameter contributed to that loss by taking the derivative of those parameters with respect to the loss function.
-def backProp(dense1, dense2, activation1, activation2, inputs, targets):
+#It stores the derivatives it calculates to speed up calculations of derivates further down.
+def backProp(layers, activations, inputs, targets):
     m = targets.size
     oneHotY = oneHotEncode(targets)
-    dZ2 = activation2.outputs.T - oneHotY
-    dW2 = 1/m * dZ2.dot(activation1.outputs)
-    db2 = 1/m * np.sum(dZ2)
-    dZ1 = dense2.weights.dot(dZ2) * ReLUDerivative(dense1.outputs).T
-    dW1 = 1/m * dZ1.dot(inputs)
-    db1 = 1/m * np.sum(dZ1)
-    return dW1, db1, dW2, db2
+    dZArray = []
+    dWArray = []
+    dbArray = []
+    dZ = activations[len(activations)-1].outputs.T - oneHotY
+    dZArray.append(dZ)
+    for i in range(len(layers)):
+        if(len(activations)-2-i >= 0):
+            dW = 1/m * dZArray[i].dot(activations[len(activations)-2-i].outputs)
+            db = 1/m * np.sum(dZArray[i])
+            dZ = layers[len(layers)-1-i].weights.dot(dZArray[i]) * autoDiff(layers[len(layers)-2-i], activations[len(activations)-2-i]).T
+            dZArray.append(dZ)
+            dWArray.append(dW)
+            dbArray.append(db)
+        else:
+            dW = 1/m * dZArray[i].dot(inputs)
+            db = 1/m * np.sum(dZArray[i])
+            dWArray.append(dW)
+            dbArray.append(db)
+    return dWArray, dbArray
 
 #Calculates the new weights and biases of each layer by taking the derivative value from back propagation and multiplying by alpha and subtracting
 # the old weights and biases from the new ones. The weights and biases of each respective layer are set to their new values. The alpha value is a
 # learning rate value that is designed to lower the amount the weights and biases are changed by to prevent overshooting
-def updateParameters(dense1, dense2, dW1, db1, dW2, db2, alpha):
-    dense1.weights = dense1.weights - alpha * dW1.T
-    dense1.biases = dense1.biases - alpha * db1
-    dense2.weights = dense2.weights - alpha * dW2.T
-    dense2.biases = dense2.biases - alpha * db2
+def updateParameters(layers, dWeights, dbiases, alpha):
+    for i in range(len(layers)):
+        layers[i].weights = layers[i].weights - alpha * dWeights[len(dWeights)-1-i].T
+        layers[i].biases = layers[i].biases - alpha * dbiases[len(dbiases)-1-i]
 
 #Returns the high probablity digit that the network predicted from the last activation's output (Which is this case is a softmax activation).
 def get_predictions(A2):
     return np.argmax(A2[0], 0)
 
 #Does forward prop of chose sample and calls get_predictions to get the digit the network thinks it is.
-def makePrediction(layer1, layer2, activation1, activation2, input):
+def makePrediction(layers, activations, input):
     Xpredict = np.zeros((1, 784))
     Xpredict[0] = input
-    forwardProp(layer1, layer2, activation1, activation2, input)
-    return get_predictions(activation2.outputs)
+    forwardProp(layers, activations, input)
+    return get_predictions(activations[len(activations)-1].outputs)
 
 #Tests the prediction of the sample given in the test data by resizing the array into 28x28 pixel array and returning color values to what they were.
 #Shows the picture of the sample given along with its label and what the network predicted.
 def testPredictionTest(index):
     currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
-    plt.title("Network: " + str(makePrediction(layer1, layer2, activation1, activation2, XTesting[index])))
+    plt.title("Network: " + str(makePrediction(layersArray, activationsArray, XTesting[index])))
     plt.gray()
     plt.imshow(currentImage, interpolation="nearest")
     plt.show()
@@ -113,26 +138,25 @@ def testPredictionTrain(index):
     currentImage = Xtrain.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
     plt.title(
-        "Network: " + str(makePrediction(layer1, layer2, activation1, activation2, Xtrain[index])) + " | Label: " + str(ytrain[index]))
+        "Network: " + str(makePrediction(layersArray, activationsArray, Xtrain[index])) + " | Label: " + str(ytrain[index]))
     plt.gray()
     plt.imshow(currentImage, interpolation="nearest")
     plt.show()
 
 #Takes the sample given and opens it in a tkinter application by calling plot.
 def openLabelGUI(index):
-    currentImage = Xtrain.T[:, index, None]
+    currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
-    plot(currentImage, index, makePrediction(layer1, layer2, activation1, activation2, XTesting[index]))
+    plot(currentImage, index, makePrediction(layersArray, activationsArray, XTesting[index]))
 
 #Takes the array of the next label and returns it along with the prediction of network.
 def openNextLabel(index):
     nextImage = XTesting.T[:, index, None]
     nextImage = nextImage.reshape((28, 28)) * 255
-    return nextImage, makePrediction(layer1, layer2, activation1, activation2, XTesting[index])
+    return nextImage, makePrediction(layersArray, activationsArray, XTesting[index])
 
 #Makes sure the index isn't at the beginning or end of sample list and grabs the array of the next/previous label and displays it and the network prediction.
 def nextLabel(nextIndex, label, numLabel, direction):
-    print(nextIndex.index)
     if(direction < 0 and not(nextIndex.index == 0)):
         nextIndex.index = nextIndex.index - 1
     elif(direction > 0 and not(nextIndex.index == 27999)):
@@ -159,9 +183,8 @@ def plot(testImage, index, prediction):
     resizedImage = image.resize((448, 448), resample=Image.NEAREST)
     photo = ImageTk.PhotoImage(resizedImage)
     label = tk.Label(window, image=photo)
-    label.configure(pady=20)
     label.pack()
-    numberLabel = tk.Label(window, text=str(prediction), font=("Arial", 25))
+    numberLabel = tk.Label(window, text=str(prediction), font=("Arial", 25), background='green')
     numberLabel.pack()
     backButton = tk.Button(window, text="Previous label", command= lambda: nextLabel(GUIIndex, label, numberLabel, -1))
     backButton.pack()
@@ -182,6 +205,28 @@ def shuffleData(data, n):
     Xtrain = randomNoise(Xtrain, m, n, .25, 45)
     return Xtrain, ytrain
 
+def createLayers(layersString):
+    layersString = layersString.replace(' ', '')
+    layersString = layersString.split(',')
+    layersString = [int(item) for item in layersString]
+    layerList = []
+    for i in range(len(layersString)-1):
+        newLayer = layer(layersString[i], layersString[i+1])
+        layerList.append(newLayer)
+    return layerList
+
+def createActivations(layersList):
+    activationsList = []
+    for i in range(len(layersList)):
+        if(not(i == len(layersList)-1)):
+            newReLU = ReLU()
+            activationsList.append(newReLU)
+        else:
+            newSoftmax = softmax()
+            activationsList.append(newSoftmax)
+    return activationsList
+
+
 testingData = pd.read_csv("test.csv")
 testingData = np.array(testingData)
 m, n = testingData.shape
@@ -195,30 +240,32 @@ data = np.array(data)
 m, n = data.shape
 Xtrain, ytrain = shuffleData(data, n)
 
+layers = input("Input layers (comma seperated).")
+#activations = input("Input the activation for the hidden layers and activation for final layer (comma seperated).")
 
-layer1 = layer(784,10)
-activation1 = ReLU()
-layer2 = layer(10, 10)
-activation2 = softmax()
+layersArray = createLayers(layers)
+activationsArray = createActivations(layersArray)
 
 iterations = 40000
 numCorrect = 0
 total = 0
-sets = 1
+sets = 5
 
 for shuffle in range(sets):
     for i in range(iterations):
         Xtest = np.zeros((1, 784))
         Xtest[0] = Xtrain[i]
-        forwardProp(layer1, layer2, activation1, activation2, Xtest)
-        dW1, db1, dW2, db2 = backProp(layer1, layer2, activation1, activation2, Xtest, ytrain[i])
-        updateParameters(layer1, layer2, dW1, db1, dW2, db2, 0.01)
-        if(get_predictions(activation2.outputs) == ytrain[i]):
+        forwardProp(layersArray, activationsArray, Xtest)
+        dWArray, dbArray = backProp(layersArray, activationsArray, Xtest, ytrain[i])
+        updateParameters(layersArray, dWArray, dbArray, 0.01)
+        if(get_predictions(activationsArray[len(activationsArray)-1].outputs) == ytrain[i]):
             numCorrect += 1
         total += 1
     Xtrain, ytrain = shuffleData(data, n)
     print("Epochs completed: " + str(((shuffle+1)/sets) * 100) + "%")
 print(numCorrect/total)
+
+openLabelGUI(int(100))
 
 # df = pd.DataFrame(layer1.weights)
 # df.to_csv("weights.csv", header=False, index=False)
@@ -235,8 +282,8 @@ currentImage = imgArray
 currentImage = currentImage.reshape((28, 28)) * 255
 Xpredict = np.zeros((1, 784))
 Xpredict[0] = imgArray.flatten()
-print(makePrediction(layer1, layer2, activation1, activation2, Xpredict))
-print(activation2.outputs)
+print(makePrediction(layersArray, activationsArray, Xpredict))
+print(activationsArray[len(activationsArray)-1].outputs)
 plt.gray()
 plt.imshow(currentImage, interpolation="nearest")
 #plt.show()

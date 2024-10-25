@@ -1,7 +1,8 @@
 import random
-
 import numpy as np
 from scipy.ndimage import rotate
+
+
 def randomNoise(dataSet, m, n, noise, angleRange):
     i = 0
     for sample in dataSet:
