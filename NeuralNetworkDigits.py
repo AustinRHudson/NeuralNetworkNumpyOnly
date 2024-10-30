@@ -15,6 +15,8 @@ class layer:
         #Initializing random weights and biases according to number of inputs and numNeurons.
         self.weights = np.random.rand(numInputs, numNeurons) - 0.5
         self.biases = np.random.randn(1, numNeurons)
+        self.numInputs = numInputs
+        self.numNeurons = numNeurons
     def forward(self, inputs):
         #Dot product of the inputs and weights while adding the biases to get appropriate output.
         self.outputs = inputs.dot(self.weights) + self.biases
@@ -58,9 +60,9 @@ def autoDiff(inputs, activation):
         return 3
     return 0
 #Method used to categorize the correct output and subtract from what the network outputted to determine loss.
-def oneHotEncode(Y):
+def oneHotEncode(Y, numOutputs):
     #Makes an array of zeroes that has the dimensions of (sampleAmount, output amount).
-    oneHotY = np.zeros((Y.size, 10))
+    oneHotY = np.zeros((Y.size, numOutputs))
     #Makes the correct sample of that column a 1 and the rest stay zero.
     oneHotY[np.arange(Y.size), Y] = 1
     #Transpose to be usable in back propagation.
@@ -81,7 +83,7 @@ def forwardProp(layers, activations, inputs):
 #It stores the derivatives it calculates to speed up calculations of derivates further down.
 def backProp(layers, activations, inputs, targets):
     m = targets.size
-    oneHotY = oneHotEncode(targets)
+    oneHotY = oneHotEncode(targets, layers[len(layers)-1].numNeurons)
     dZArray = []
     dWArray = []
     dbArray = []
@@ -249,7 +251,7 @@ activationsArray = createActivations(layersArray)
 iterations = 40000
 numCorrect = 0
 total = 0
-sets = 5
+sets = int(input("Input number of epochs."))
 
 for shuffle in range(sets):
     for i in range(iterations):
@@ -271,8 +273,6 @@ openLabelGUI(int(100))
 # df.to_csv("weights.csv", header=False, index=False)
 # df = pd.read_csv("weights.csv")
 # print(layer1.weights.shape, df)
-
-openLabelGUI(int(100))
 
 img = Image.open("testDigit.png")
 img = img.convert('L')
