@@ -1,9 +1,11 @@
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tkinter as tk
 from PIL import Image, ImageTk
-import cv2
+#import cv2
 from ImageRandomization import randomNoise
 
 
@@ -267,7 +269,7 @@ for shuffle in range(sets):
     print("Epochs completed: " + str(((shuffle+1)/sets) * 100) + "%")
 print(numCorrect/total)
 
-openLabelGUI(int(100))
+openLabelGUI(int(random.randrange(1,1000)))
 
 # df = pd.DataFrame(layer1.weights)
 # df.to_csv("weights.csv", header=False, index=False)
