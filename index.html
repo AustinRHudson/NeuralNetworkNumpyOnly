@@ -1,0 +1,47 @@
+<canvas
+    id="canvas"
+    width="280"
+    height="280"
+    style="border:1px solid black;">
+</canvas>
+
+<br>
+
+<button id="predict">
+Predict
+</button>
+
+<p id="result"></p>
+
+<script>
+    const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+ctx.fillStyle = "black";
+ctx.fillRect(0,0,280,280);
+
+ctx.strokeStyle = "white";
+ctx.lineWidth = 20;
+ctx.lineCap = "round";
+
+let drawing = false;
+
+canvas.onmousedown = () => drawing = true;
+canvas.onmouseup = () => drawing = false;
+
+canvas.onmousemove = e => {
+
+    if(!drawing) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineTo(x,y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+};
+</script>
