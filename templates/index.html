@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 
+
 <canvas
     id="canvas"
-    width="280"
-    height="280"
+    width="520"
+    height="520"
     style="border:1px solid black;">
 </canvas>
 
@@ -23,15 +24,30 @@ Clear
 </html>
 
 <script>
+    const clearButton = document.getElementById("clear");
     const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 ctx.fillStyle = "black";
-ctx.fillRect(0,0,280,280);
+ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.strokeStyle = "white";
-ctx.lineWidth = 20;
-ctx.lineCap = "round";
+const pixelData = Array(784).fill(0);
+
+function fillPixel(x, y){
+    let num = canvas.width/28;
+    let floorX = Math.floor(x/num) * num;
+    let floorY = Math.floor(y/num) * num;
+    ctx.fillStyle = "white";
+    ctx.fillRect(floorX, floorY, num, num);
+    pixelData[floorY * num + floorX] = 1;
+}
+
+clearButton.addEventListener("click", () => {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    pixelData = Array(784).fill(0);
+    console.log("button clicked");
+});
 
 let drawing = false;
 
@@ -47,10 +63,6 @@ canvas.onmousemove = e => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-
-    ctx.lineTo(x,y);
-    ctx.stroke();
+    fillPixel(x, y);
 };
 </script>
