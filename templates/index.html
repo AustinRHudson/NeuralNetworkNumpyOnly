@@ -34,6 +34,16 @@ ctx.fillRect(0,0,canvas.width,canvas.height);
 
 const pixelData = Array(784).fill(0);
 
+const intervalId = setInterval(() => {
+  fetch('/api/data', {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(pixelData)
+    })
+}, 2000);
+
 function fillPixel(x, y){
     let num = canvas.width/28;
     let floorX = Math.floor(x/num) * num;
@@ -52,13 +62,15 @@ clearButton.addEventListener("click", () => {
 });
 
 predictButton.addEventListener("click", () => {
+/*
     fetch('/api/data', {
     method: 'POST',
     headers: {
     'Content-Type': 'application/json'
     },
     body: JSON.stringify(pixelData)
-    })
+    }) */
+
     console.log("button clicked");
 });
 

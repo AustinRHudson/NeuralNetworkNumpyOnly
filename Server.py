@@ -13,7 +13,7 @@ def index():
 def receive_data():
     data = request.get_json()
     print(data)
-    print(apiPrediction(data))
+    print(apiPrediction(data, "network.npz"))
     return jsonify({"status": "success", "message": f"Data received for data"})
 
 if __name__ == "__main__":

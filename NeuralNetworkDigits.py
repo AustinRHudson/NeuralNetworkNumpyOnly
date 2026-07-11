@@ -230,18 +230,20 @@ def createActivations(layersList):
             activationsList.append(newSoftmax)
     return activationsList
 
-def load():
-    layers = "784,10"
+def load(fileName):
+    layers = "784,256,10"
     layersArray = createLayers(layers)
     activationsArray = createActivations(layersArray)
-    data = np.load("test.npz")
+    data = np.load(fileName)
     layersArray[0].weights = data['W1']
     layersArray[0].biases = data['b1']
+    layersArray[1].weights = data['W2']
+    layersArray[1].biases = data['b2']
     print(layersArray[0].weights)
     return layersArray, activationsArray
 
-def apiPrediction(image):
-    layersArray, activationsArray = load()
+def apiPrediction(image, fileName):
+    layersArray, activationsArray = load(fileName)
     Xtest = np.zeros((1, 784))
     image = np.array(image)
     print(image)
@@ -296,13 +298,15 @@ def startNeuralNet():
         np.savez(
             filename,
             W1=layersArray[0].weights,
-            b1=layersArray[0].biases
+            b1=layersArray[0].biases,
+            W2=layersArray[1].weights,
+            b2=layersArray[1].biases
         )
 
-    save("test")
+    save("network")
     return
 
-load()
+#startNeuralNet()
 
 # openLabelGUI(int(random.randrange(1,1000)))
 
