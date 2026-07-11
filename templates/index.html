@@ -9,6 +9,10 @@
     style="border:1px solid black;">
 </canvas>
 
+<body>
+The current prediction is: <span id="prediction">5</span>
+</body>
+
 <br>
 
 <button id="predict">
@@ -28,6 +32,7 @@ Clear
     const predictButton = document.getElementById("predict");
     const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+    const predictText = document.getElementById("prediction");
 
 ctx.fillStyle = "black";
 ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -41,8 +46,11 @@ const intervalId = setInterval(() => {
     'Content-Type': 'application/json'
     },
     body: JSON.stringify(pixelData)
-    })
-}, 2000);
+    }).then(response => response.json()).then(data => {
+    console.log(data.prediction);
+    predictText.textContent = data.prediction;
+});
+}, 200);
 
 function fillPixel(x, y){
     let num = canvas.width/28;

@@ -12,9 +12,9 @@ def index():
 @app.route('/api/data', methods=['POST'])
 def receive_data():
     data = request.get_json()
-    print(data)
-    print(apiPrediction(data, "network.npz"))
-    return jsonify({"status": "success", "message": f"Data received for data"})
+    prediction = apiPrediction(data, "network.npz")
+    print(prediction)
+    return jsonify({"status": "success", "message": f"Data received for data", "prediction": int(prediction)})
 
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=8000)

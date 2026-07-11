@@ -246,7 +246,6 @@ def apiPrediction(image, fileName):
     layersArray, activationsArray = load(fileName)
     Xtest = np.zeros((1, 784))
     image = np.array(image)
-    print(image)
     Xtest[0] = np.array(image)
     return makePrediction(layersArray, activationsArray, image)
 
