@@ -127,7 +127,7 @@ def makePrediction(layers, activations, input):
 
 #Tests the prediction of the sample given in the test data by resizing the array into 28x28 pixel array and returning color values to what they were.
 #Shows the picture of the sample given along with its label and what the network predicted.
-def testPredictionTest(index):
+def testPredictionTest(index, layersArray, activationsArray, XTesting):
     currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
     plt.title("Network: " + str(makePrediction(layersArray, activationsArray, XTesting[index])))
@@ -138,23 +138,23 @@ def testPredictionTest(index):
 
 #Tests the prediction of the sample given in the train data by resizing the array into 28x28 pixel array and returning color values to what they were.
 #Shows the picture of the sample given along with its label and what the network predicted.
-def testPredictionTrain(index):
+def testPredictionTrain(index, layersArray, activationsArray, Xtrain, yTrain):
     currentImage = Xtrain.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
     plt.title(
-        "Network: " + str(makePrediction(layersArray, activationsArray, Xtrain[index])) + " | Label: " + str(ytrain[index]))
+        "Network: " + str(makePrediction(layersArray, activationsArray, Xtrain[index])) + " | Label: " + str(yTrain[index]))
     plt.gray()
     plt.imshow(currentImage, interpolation="nearest")
     plt.show()
 
 #Takes the sample given and opens it in a tkinter application by calling plot.
-def openLabelGUI(index):
+def openLabelGUI(index, layersArray, activationsArray, XTesting):
     currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
     plot(currentImage, index, makePrediction(layersArray, activationsArray, XTesting[index]))
 
 #Takes the array of the next label and returns it along with the prediction of network.
-def openNextLabel(index):
+def openNextLabel(index, layersArray, activationsArray, XTesting):
     nextImage = XTesting.T[:, index, None]
     nextImage = nextImage.reshape((28, 28)) * 255
     return nextImage, makePrediction(layersArray, activationsArray, XTesting[index])
@@ -230,62 +230,83 @@ def createActivations(layersList):
             activationsList.append(newSoftmax)
     return activationsList
 
+def load():
+    layers = "784,10"
+    layersArray = createLayers(layers)
+    activationsArray = createActivations(layersArray)
+    data = np.load("test.npz")
+    layersArray[0].weights = data['W1']
+    layersArray[0].biases = data['b1']
+    print(layersArray[0].weights)
+    return layersArray, activationsArray
 
-testingData = pd.read_csv("test.csv")
-testingData = np.array(testingData)
-m, n = testingData.shape
-data_test = testingData.T
-XTesting = data_test
-XTesting = XTesting/255.0
-XTesting = XTesting.T
+def apiPrediction(image):
+    layersArray, activationsArray = load()
+    Xtest = np.zeros((1, 784))
+    image = np.array(image)
+    print(image)
+    Xtest[0] = np.array(image)
+    return makePrediction(layersArray, activationsArray, image)
 
-data = pd.read_csv("train.csv")
-data = np.array(data)
-m, n = data.shape
-Xtrain, ytrain = shuffleData(data, n)
 
-layers = input("Input layers (comma seperated).")
-#activations = input("Input the activation for the hidden layers and activation for final layer (comma seperated).")
+def startNeuralNet():
+    testingData = pd.read_csv("test.csv")
+    testingData = np.array(testingData)
+    m, n = testingData.shape
+    data_test = testingData.T
+    XTesting = data_test
+    XTesting = XTesting / 255.0
+    XTesting = XTesting.T
 
-layersArray = createLayers(layers)
-activationsArray = createActivations(layersArray)
-
-iterations = 40000
-numCorrect = 0
-total = 0
-sets = int(input("Input number of epochs."))
-
-for shuffle in range(sets):
-    for i in range(iterations):
-        Xtest = np.zeros((1, 784))
-        Xtest[0] = Xtrain[i]
-        forwardProp(layersArray, activationsArray, Xtest)
-        dWArray, dbArray = backProp(layersArray, activationsArray, Xtest, ytrain[i])
-        updateParameters(layersArray, dWArray, dbArray, 0.01)
-        if(get_predictions(activationsArray[len(activationsArray)-1].outputs) == ytrain[i]):
-            numCorrect += 1
-        total += 1
+    data = pd.read_csv("train.csv")
+    data = np.array(data)
+    m, n = data.shape
     Xtrain, ytrain = shuffleData(data, n)
-    print("Epochs completed: " + str(((shuffle+1)/sets) * 100) + "%")
-print(numCorrect/total)
 
-openLabelGUI(int(random.randrange(1,1000)))
+    layers = input("Input layers (comma seperated).")
+    # activations = input("Input the activation for the hidden layers and activation for final layer (comma seperated).")
+
+    layersArray = createLayers(layers)
+    activationsArray = createActivations(layersArray)
+
+    iterations = 40000
+    numCorrect = 0
+    total = 0
+    sets = int(input("Input number of epochs."))
+
+    for shuffle in range(sets):
+        for i in range(iterations):
+            Xtest = np.zeros((1, 784))
+            Xtest[0] = Xtrain[i]
+            forwardProp(layersArray, activationsArray, Xtest)
+            dWArray, dbArray = backProp(layersArray, activationsArray, Xtest, ytrain[i])
+            updateParameters(layersArray, dWArray, dbArray, 0.01)
+            if (get_predictions(activationsArray[len(activationsArray) - 1].outputs) == ytrain[i]):
+                numCorrect += 1
+            total += 1
+        Xtrain, ytrain = shuffleData(data, n)
+        print("Epochs completed: " + str(((shuffle + 1) / sets) * 100) + "%")
+    print(numCorrect / total)
+
+    for i in range(len(layersArray)):
+        print(layersArray[i])
+        print("next layer")
+
+    def save(filename):
+        np.savez(
+            filename,
+            W1=layersArray[0].weights,
+            b1=layersArray[0].biases
+        )
+
+    save("test")
+    return
+
+load()
+
+# openLabelGUI(int(random.randrange(1,1000)))
 
 # df = pd.DataFrame(layer1.weights)
 # df.to_csv("weights.csv", header=False, index=False)
 # df = pd.read_csv("weights.csv")
 # print(layer1.weights.shape, df)
-
-img = Image.open("testDigit.png")
-img = img.convert('L')
-imgArray = np.array(img)
-imgArray = imgArray/255
-currentImage = imgArray
-currentImage = currentImage.reshape((28, 28)) * 255
-Xpredict = np.zeros((1, 784))
-Xpredict[0] = imgArray.flatten()
-print(makePrediction(layersArray, activationsArray, Xpredict))
-print(activationsArray[len(activationsArray)-1].outputs)
-plt.gray()
-plt.imshow(currentImage, interpolation="nearest")
-#plt.show()

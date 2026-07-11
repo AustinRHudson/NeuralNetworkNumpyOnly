@@ -25,6 +25,7 @@ Clear
 
 <script>
     const clearButton = document.getElementById("clear");
+    const predictButton = document.getElementById("predict");
     const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -39,13 +40,25 @@ function fillPixel(x, y){
     let floorY = Math.floor(y/num) * num;
     ctx.fillStyle = "white";
     ctx.fillRect(floorX, floorY, num, num);
-    pixelData[floorY * num + floorX] = 1;
+    console.log(Math.floor(y/num) + ", " + Math.floor(x/num));
+    pixelData[Math.floor(y/num) * 28 + Math.floor(x/num)] = 1;
 }
 
 clearButton.addEventListener("click", () => {
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    pixelData = Array(784).fill(0);
+    pixelData.fill(0);
+    console.log("button clicked");
+});
+
+predictButton.addEventListener("click", () => {
+    fetch('/api/data', {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(pixelData)
+    })
     console.log("button clicked");
 });
 
