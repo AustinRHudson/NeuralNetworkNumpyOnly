@@ -151,7 +151,7 @@ def testPredictionTrain(index, layersArray, activationsArray, Xtrain, yTrain):
 def openLabelGUI(index, layersArray, activationsArray, XTesting):
     currentImage = XTesting.T[:, index, None]
     currentImage = currentImage.reshape((28, 28)) * 255
-    plot(currentImage, index, makePrediction(layersArray, activationsArray, XTesting[index]))
+    #plot(currentImage, index, makePrediction(layersArray, activationsArray, XTesting[index]))
 
 #Takes the array of the next label and returns it along with the prediction of network.
 def openNextLabel(index, layersArray, activationsArray, XTesting):
@@ -160,6 +160,7 @@ def openNextLabel(index, layersArray, activationsArray, XTesting):
     return nextImage, makePrediction(layersArray, activationsArray, XTesting[index])
 
 #Makes sure the index isn't at the beginning or end of sample list and grabs the array of the next/previous label and displays it and the network prediction.
+'''
 def nextLabel(nextIndex, label, numLabel, direction):
     if(direction < 0 and not(nextIndex.index == 0)):
         nextIndex.index = nextIndex.index - 1
@@ -195,6 +196,7 @@ def plot(testImage, index, prediction):
     forwardButton = tk.Button(window, text="Next label", command= lambda: nextLabel(GUIIndex, label, numberLabel, 1))
     forwardButton.pack()
     window.mainloop()
+'''
 
 #Shuffles the data's order and applies random noise to the data to make the network better at recognizing images outside the datasets.
 def shuffleData(data, n):
@@ -206,7 +208,7 @@ def shuffleData(data, n):
     Xtrain = Xtrain / 255.0
     Xtrain = Xtrain.T
     m, n = Xtrain.shape
-    Xtrain = randomNoise(Xtrain, m, n, .25, 45)
+    #Xtrain = randomNoise(Xtrain, m, n, .25, 45)
     return Xtrain, ytrain
 
 def createLayers(layersString):
