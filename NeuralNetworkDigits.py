@@ -3,10 +3,10 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tkinter as tk
-from PIL import Image, ImageTk
+#import tkinter as tk
+#from PIL import Image, ImageTk
 #import cv2
-from ImageRandomization import randomNoise
+#from ImageRandomization import randomNoise
 
 
 #The "layer" class is a class to make a new layer object allowing for a more object oriented neural network with the possibiltiy of making a network as big as you want.
