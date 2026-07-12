@@ -12,7 +12,9 @@ def index():
 @app.route('/api/data', methods=['POST'])
 def receive_data():
     data = request.get_json()
-    prediction = apiPrediction(data, "network.npz")
+    #for i in range(0, 784, 28):
+     #   print(data[i: i + 28])
+    prediction = apiPrediction(data, "Networks/network512x2L10E.npz")
     print(prediction)
     return jsonify({"status": "success", "message": f"Data received for data", "prediction": int(prediction)})
 

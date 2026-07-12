@@ -231,15 +231,16 @@ def createActivations(layersList):
     return activationsList
 
 def load(fileName):
-    layers = "784,256,10"
-    layersArray = createLayers(layers)
-    activationsArray = createActivations(layersArray)
     data = np.load(fileName)
+    layers = data["layers"]
+    layersArray = createLayers(str(layers))
+    activationsArray = createActivations(layersArray)
     layersArray[0].weights = data['W1']
     layersArray[0].biases = data['b1']
     layersArray[1].weights = data['W2']
     layersArray[1].biases = data['b2']
-    print(layersArray[0].weights)
+    layersArray[2].weights = data['W3']
+    layersArray[2].biases = data['b3']
     return layersArray, activationsArray
 
 def apiPrediction(image, fileName):
@@ -296,10 +297,13 @@ def startNeuralNet():
     def save(filename):
         np.savez(
             filename,
+            layers=layers,
             W1=layersArray[0].weights,
             b1=layersArray[0].biases,
             W2=layersArray[1].weights,
-            b2=layersArray[1].biases
+            b2=layersArray[1].biases,
+            W3=layersArray[2].weights,
+            b3=layersArray[2].biases
         )
 
     save("network")
@@ -308,8 +312,3 @@ def startNeuralNet():
 #startNeuralNet()
 
 # openLabelGUI(int(random.randrange(1,1000)))
-
-# df = pd.DataFrame(layer1.weights)
-# df.to_csv("weights.csv", header=False, index=False)
-# df = pd.read_csv("weights.csv")
-# print(layer1.weights.shape, df)
