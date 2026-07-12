@@ -3,10 +3,12 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import alpha
+
 #import tkinter as tk
 #from PIL import Image, ImageTk
 #import cv2
-#from ImageRandomization import randomNoise
+from ImageRandomization import randomNoise
 
 
 #The "layer" class is a class to make a new layer object allowing for a more object oriented neural network with the possibiltiy of making a network as big as you want.
@@ -208,7 +210,7 @@ def shuffleData(data, n):
     Xtrain = Xtrain / 255.0
     Xtrain = Xtrain.T
     m, n = Xtrain.shape
-    #Xtrain = randomNoise(Xtrain, m, n, .25, 45)
+    Xtrain = randomNoise(Xtrain, m, n, .25, 45)
     return Xtrain, ytrain
 
 def createLayers(layersString):
@@ -237,12 +239,10 @@ def load(fileName):
     layers = data["layers"]
     layersArray = createLayers(str(layers))
     activationsArray = createActivations(layersArray)
-    layersArray[0].weights = data['W1']
-    layersArray[0].biases = data['b1']
-    layersArray[1].weights = data['W2']
-    layersArray[1].biases = data['b2']
-    layersArray[2].weights = data['W3']
-    layersArray[2].biases = data['b3']
+    num_layers = sum(1 for key in data.keys() if key.startswith('W_'))
+    for i in range(num_layers):
+        layersArray[i].weights = data[f'W_{i}']
+        layersArray[i].biases = data[f'b_{i}']
     return layersArray, activationsArray
 
 def apiPrediction(image, layersArray, activationsArray):
@@ -272,7 +272,7 @@ def startNeuralNet():
     layersArray = createLayers(layers)
     activationsArray = createActivations(layersArray)
 
-    iterations = 40000
+    iterations = int(input("Inputer size of batch. (max 40000)"))
     numCorrect = 0
     total = 0
     sets = int(input("Input number of epochs."))
@@ -289,23 +289,20 @@ def startNeuralNet():
             total += 1
         Xtrain, ytrain = shuffleData(data, n)
         print("Epochs completed: " + str(((shuffle + 1) / sets) * 100) + "%")
-    print(numCorrect / total)
+    accuracy = numCorrect / total
+    print(accuracy)
 
     for i in range(len(layersArray)):
         print(layersArray[i])
         print("next layer")
 
     def save(filename):
-        np.savez(
-            filename,
-            layers=layers,
-            W1=layersArray[0].weights,
-            b1=layersArray[0].biases,
-            W2=layersArray[1].weights,
-            b2=layersArray[1].biases,
-            W3=layersArray[2].weights,
-            b3=layersArray[2].biases
-        )
+        save_dict = {}
+        for i in range(len(layersArray)):
+            save_dict[f'W_{i}'] = layersArray[i].weights
+            save_dict[f'b_{i}'] = layersArray[i].biases
+        save_dict["layers"] = layers
+        np.savez(f'Networks/network_layers:{layers}_acc:{accuracy:.2f}', **save_dict)
 
     save("network")
     return

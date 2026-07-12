@@ -4,7 +4,7 @@ from NeuralNetworkDigits import apiPrediction, load
 
 app = Flask(__name__)
 
-layers, activations = load("Networks/network512x2L10E.npz")
+layers, activations = load("Networks/network_layers:784,512,10_acc:0.92.npz")
 
 @app.route('/')
 @app.route('/index')
