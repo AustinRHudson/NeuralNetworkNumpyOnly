@@ -245,8 +245,7 @@ def load(fileName):
     layersArray[2].biases = data['b3']
     return layersArray, activationsArray
 
-def apiPrediction(image, fileName):
-    layersArray, activationsArray = load(fileName)
+def apiPrediction(image, layersArray, activationsArray):
     Xtest = np.zeros((1, 784))
     image = np.array(image)
     Xtest[0] = np.array(image)

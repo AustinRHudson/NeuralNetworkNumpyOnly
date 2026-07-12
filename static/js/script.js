@@ -2,6 +2,7 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const predictText = document.getElementById("prediction");
+    const pollRate = 100
 
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -18,7 +19,7 @@ const intervalId = setInterval(() => {
     }).then(response => response.json()).then(data => {
     predictText.textContent = data.prediction;
 });
-}, 100);
+}, pollRate);
 
 function checkUp(calc){
     if(calc - 28 > 0){

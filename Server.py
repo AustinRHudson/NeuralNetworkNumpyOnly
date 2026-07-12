@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 from waitress import serve
-from NeuralNetworkDigits import apiPrediction
+from NeuralNetworkDigits import apiPrediction, load
 
 app = Flask(__name__)
+
+layers, activations = load("Networks/network512x2L10E.npz")
 
 @app.route('/')
 @app.route('/index')
@@ -12,10 +14,7 @@ def index():
 @app.route('/api/data', methods=['POST'])
 def receive_data():
     data = request.get_json()
-    #for i in range(0, 784, 28):
-     #     print(data[i: i + 28])
-    prediction = apiPrediction(data, "Networks/network512x2L10E.npz")
-    print(prediction)
+    prediction = apiPrediction(data, layers, activations)
     return jsonify({"status": "success", "message": f"Data received for data", "prediction": int(prediction)})
 
 if __name__ == "__main__":
