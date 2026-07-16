@@ -26,20 +26,8 @@ Publicly deployed web application on Render
 Live Application: neuralnetworknumpyonly.onrender.com
 
 <p align="center">
-  <img src="/demo.gif" width="700">
+  <img src="NetworkTest.gif" width="700">
 </p>
-
-###############################################
-
-Technologies:
-
-Python
-Flask
-NumPy
-HTML5
-CSS3
-JavaScript
-Render
 
 ###############################################
 
