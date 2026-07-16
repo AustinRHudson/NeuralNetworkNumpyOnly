@@ -8,18 +8,26 @@
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     const pixelData = Array(784).fill(0);
+    let empty = true;
 
 const intervalId = setInterval(() => {
-  fetch('/api/data', {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(pixelData)
-    }).then(response => response.json()).then(data => {
-    predictText.textContent = data.prediction;
-});
+    if (!empty) {
+        fetch('/api/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pixelData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            predictText.textContent = data.prediction;
+        });
+    } else {
+        predictText.textContent = "None";
+    }
 }, pollRate);
+
 
 function checkUp(calc){
     if(calc - 28 > 0){
@@ -218,6 +226,7 @@ function fillPixel(x, y){
     let calc = Math.floor(y/num) * 28 + Math.floor(x/num);
     if(calc < 784){
         pixelData[calc] = 1;
+        empty = false;
     }
     checkNeighbors(calc, floorX, floorY, num);
 }
@@ -226,6 +235,7 @@ clearButton.addEventListener("click", () => {
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     pixelData.fill(0);
+    empty = true;
 });
 
 let drawing = false;
