@@ -9,14 +9,17 @@ The project includes an interactive web application where users can draw handwri
 Modern machine learning libraries abstract away much of the underlying mathematics. This project was created to develop a deeper understanding of how neural networks operate internally by implementing every stage of training and inference manually.
 
 <h3>Features</h3>
-Neural network implemented entirely with NumPy
-Configurable network architecture
-Model serialization for saving and loading trained weights
-Trained on the MNIST handwritten digit dataset
-Flask REST API for model inference
-Interactive browser-based drawing canvas
-Real-time handwritten digit recognition
-Publicly deployed web application on Render
+
+<ul>
+  <li>Neural network implemented entirely with NumPy</li>
+  <li>Configurable network architecture</li>
+  <li>Model serialization for saving and loading trained weights</li>
+  <li>Trained on the MNIST handwritten digit dataset</li>
+  <li>Flask REST API for model inference</li>
+  <li>Interactive browser-based drawing canvas</li>
+  <li>Real-time handwritten digit recognition</li>
+  <li>Publicly deployed web application on Render</li>
+</ul>
 
 <h3>Live Application:</h3>
 <a href="https://neuralnetworknumpyonly.onrender.com">neuralnetworknumpyonly.onrender.com</a>
